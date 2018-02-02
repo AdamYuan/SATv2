@@ -3,8 +3,8 @@
 
 #include "parser.hpp"
 #include "config.hpp"
+#include <cstring>
 #include <random>
-#include <memory>
 
 struct ModifyInfo
 {

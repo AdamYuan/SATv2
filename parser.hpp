@@ -1,7 +1,6 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
-#include <memory>
 #include <vector>
 #include "config.hpp"
 

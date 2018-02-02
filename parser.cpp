@@ -4,11 +4,7 @@
 #include <algorithm>
 
 CnfFile::CnfFile() : var_num_(0), paren_num_(0) {  }
-
-CnfFile::CnfFile(const char *filename) : var_num_(0), paren_num_(0)
-{
-	Parse(filename);
-}
+CnfFile::CnfFile(const char *filename) : var_num_(0), paren_num_(0) { Parse(filename); }
 
 void CnfFile::Parse(const char *filename)
 {
