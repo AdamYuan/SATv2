@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cmath>
 
-SatSolver::SatSolver() : max_tries(128), max_temperature(0.3f), min_temperature(0.01f)
+SatSolver::SatSolver() : max_tries(50), max_temperature(0.3f), min_temperature(0.01f)
 {
 	seed = (unsigned long)(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 }
@@ -22,13 +22,13 @@ bool SatSolver::Run(CnfFile &file)
 
 	int var_num = file.GetVarNum();
 	Solution solution(file);
-	for(int k=1; k<=max_tries; ++k)
+	for(int i=1; i<=max_tries; ++i)
 	{
-		printf("\rTRY NO. %d", k);
+		printf("\rTRY NO. %d", i);
 		fflush(stdout);
 		solution.Randomize(generator);
 
-		int times = 0;
+		int counter = 0;
 		float temperature = max_temperature;
 		while(temperature > min_temperature)
 		{
@@ -38,7 +38,7 @@ bool SatSolver::Run(CnfFile &file)
 				solution.Output();
 				return solution.Check();
 			}
-			temperature = max_temperature * expf(float(-(times++)) / float(var_num * k));
+			temperature = max_temperature * expf(float(-(counter++)) / float(var_num * i));
 
 			for(int ind=0; ind<var_num; ++ind)
 			{
