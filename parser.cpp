@@ -33,25 +33,32 @@ void CnfFile::Parse(const char *filename)
 			if(parens_array_index >= paren_num_)
 				THROW_PARSE_EXCEPTION;
 
-			int vec[PAREN_SIZE];
-
 			Paren &paren = parens_array_[parens_array_index];
 			paren.paren_index = parens_array_index;
 
 			std::istringstream str_input(buf);
-			for(int ind=0; ind<PAREN_SIZE; ++ind)
+			int counter = 0, buf;
+			while(str_input >> buf)
 			{
-				str_input >> vec[ind];
-				ElementPair &data = paren.elements[ind];
-				data = {std::abs(vec[ind]) - 1, vec[ind] < 0};
+				if(buf == 0) break;
+
+				ElementPair &data = paren.elements[counter];
+				data = {std::abs(buf) - 1, buf < 0};
 
 				if(data.var_index >= var_num_) 
 					THROW_PARSE_EXCEPTION;
 
 				related_parens_array_[data.nagative][data.var_index]
 					.push_back(parens_array_ + parens_array_index);
+
+				counter ++;
 			}
-			parens_array_index++;
+			if(counter != 0)
+			{
+				if(counter != PAREN_SIZE)
+					THROW_PARSE_EXCEPTION;
+				parens_array_index++;
+			}
 		}
 	}
 

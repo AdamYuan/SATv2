@@ -4,7 +4,7 @@ Efficient boolean satisfiability problem(SAT) solver using simulated annealing
 ```bash
 git clone https://github.com/AdamYuan/SATv2.git
 cd SATv2
-make -j4
+make
 ```
 ## Usage
 ```bash
