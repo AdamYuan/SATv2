@@ -1,23 +1,12 @@
 GCC_FLAGS = -Ofast
+EXECUTABLE_NAME = SATv2
 
-SATv2: \
-	main.o parser.o data.o solver.o \
-	parser.hpp data.hpp solver.hpp config.hpp
-	g++ *.o -o SATv2 $(GCC_FLAGS)
-
-main.o: main.cpp solver.hpp
-	g++ -c main.cpp $(GCC_FLAGS) -o main.o
-
-parser.o: parser.cpp parser.hpp config.hpp
-	g++ -c parser.cpp $(GCC_FLAGS) -o parser.o
-
-data.o: data.cpp data.hpp config.hpp
-	g++ -c data.cpp $(GCC_FLAGS) -o data.o
-
-solver.o: solver.cpp solver.hpp config.hpp
-	g++ -c solver.cpp $(GCC_FLAGS) -o solver.o
+$(EXECUTABLE_NAME): \
+	main.cpp parser.cpp data.cpp solver.cpp \
+	parser.hpp data.hpp solver.hpp config.hpp 
+	g++ *.cpp -o $(EXECUTABLE_NAME) $(GCC_FLAGS)
 
 .PHONY: clean
 
 clean:
-	rm *.o SATv2
+	rm $(EXECUTABLE_NAME)

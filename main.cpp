@@ -11,6 +11,8 @@ static const char *kHelpStr{
 		"\t-min_temp [MIN TEMPERATURE]\n"\
 		"\t-seed [RANDOM SEED]"};
 
+#define PRINT_HELP_AND_EXIT {printf("%s\n", kHelpStr); return 1;}
+
 int main(int argc, char **argv)
 {
 	argc--;
@@ -19,6 +21,8 @@ int main(int argc, char **argv)
 	CnfFile file;
 	SatSolver solver;
 
+	if(argc == 0)
+		PRINT_HELP_AND_EXIT;
 	for(int ind=0; ind<argc; )
 		if(ind < argc - 1)
 		{
@@ -34,17 +38,11 @@ int main(int argc, char **argv)
 			else if(strcmp("-seed", cmd) == 0)
 				sscanf(arg, "%lu", &solver.seed);
 			else
-			{
-				printf("%s\n", kHelpStr);
-				return 1;
-			}
+				PRINT_HELP_AND_EXIT;
 			ind += 2;
 		}
 		else
-		{
-			printf("%s\n", kHelpStr);
-			return 1;
-		}
+			PRINT_HELP_AND_EXIT;
 
 	solver.OutputArgs();
 
