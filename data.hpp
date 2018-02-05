@@ -17,7 +17,7 @@ class Solution
 	private:
 		int var_num_, paren_num_;
 		CnfFile &file_;
-		bool var_value_array_[MAX_VAR_NUM], paren_value_array_[MAX_PAREN_NUM], paren_updated_flags_[MAX_PAREN_NUM];
+		bool var_value_array_[MAX_VAR_NUM], paren_value_array_[MAX_PAREN_NUM];
 		ModifyInfo paren_value_modify_array_[MAX_PAREN_NUM];
 		int satisfied_count_, satisfied_count_tmp_, paren_value_modify_count_;
 		inline bool getParenVal(const Paren *paren) const
@@ -43,10 +43,8 @@ class Solution
 			var_ref = !var_ref;
 			const std::vector<const Paren*> &related_parens_update = file_.GetRelatedParens(var_ref, var_index);
 
-			std::fill(paren_updated_flags_, paren_updated_flags_ + paren_num_, false);
 			for(const Paren* ptr : related_parens)
 			{
-				paren_updated_flags_[ptr->paren_index] = true;
 				if(!paren_value_array_[ptr->paren_index])
 				{
 					paren_value_modify_array_[paren_value_modify_count_++] = {ptr->paren_index, true};
@@ -56,8 +54,6 @@ class Solution
 
 			for(const Paren* ptr : related_parens_update)
 			{
-				if(paren_updated_flags_[ptr->paren_index])
-					continue;
 				const bool &paren_value_old = paren_value_array_[ptr->paren_index];
 				bool paren_value_new = getParenVal(ptr);
 				if(paren_value_new != paren_value_old)

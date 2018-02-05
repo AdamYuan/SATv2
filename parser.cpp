@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <set>
 
 CnfFile::CnfFile() : var_num_(0), paren_num_(0) {  }
 CnfFile::CnfFile(const char *filename) : var_num_(0), paren_num_(0) { Parse(filename); }
@@ -10,13 +11,14 @@ void CnfFile::Parse(const char *filename)
 {
 	std::ifstream in_file(filename);
 	if(!in_file.is_open())
-		throw std::runtime_error("READ CNF FILE IO ERROR");
+		throw std::runtime_error("CNF FILE IO ERROR");
 
 	std::string buf;
 
 	int parens_array_index = 0, line_ind = 0;
 
-#define THROW_PARSE_EXCEPTION throw std::runtime_error("READ CNF FILE PARSE ERROR AT #" + std::to_string(line_ind))
+	std::set<Paren*> related_parens_set[2][MAX_VAR_NUM];
+#define THROW_PARSE_EXCEPTION throw std::runtime_error("CNF FILE PARSE ERROR AT LINE #" + std::to_string(line_ind))
 	while(std::getline(in_file, buf))
 	{
 		line_ind ++;
@@ -48,8 +50,7 @@ void CnfFile::Parse(const char *filename)
 				if(data.var_index >= var_num_) 
 					THROW_PARSE_EXCEPTION;
 
-				related_parens_array_[data.nagative][data.var_index]
-					.push_back(parens_array_ + parens_array_index);
+				related_parens_set[data.nagative][data.var_index].insert(parens_array_ + parens_array_index);
 
 				counter ++;
 			}
@@ -64,13 +65,21 @@ void CnfFile::Parse(const char *filename)
 
 	for(int ind=0; ind<var_num_; ++ind)
 	{
-		std::vector<const Paren*> &vec0 = related_parens_array_[0][ind];
-		std::sort(vec0.begin(), vec0.end());
-		vec0.erase(std::unique(vec0.begin(), vec0.end()), vec0.end());
-
-		std::vector<const Paren*> &vec1 = related_parens_array_[1][ind];
-		std::sort(vec1.begin(), vec1.end());
-		vec1.erase(std::unique(vec1.begin(), vec1.end()), vec1.end());
+		//find true-forever parens
+		for(auto iter = related_parens_set[0][ind].begin(); iter != related_parens_set[0][ind].end(); )
+		{
+			Paren *ptr = *iter;
+			if(related_parens_set[1][ind].count(ptr))
+			{
+				printf("WARNING #%d PAREN IS TRUE FOREVER\n", ptr->paren_index);
+				related_parens_set[1][ind].erase(ptr);
+				iter = related_parens_set[0][ind].erase(iter);
+			}
+			else
+				++iter;
+		}
+		for(int t=0; t<=1; ++t)
+			related_parens_vector_[t][ind] = std::vector<const Paren*>(related_parens_set[t][ind].begin(), related_parens_set[t][ind].end());
 	}
 
 	printf("%s parse successful with:\n", filename);
