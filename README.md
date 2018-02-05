@@ -1,5 +1,5 @@
 # SATv2
-Efficient boolean satisfiability problem(SAT) solver using simulated annealing
+An efficient c++ implementation of SASAT algorithm for solving 3-SAT(boolean satisfiability problem)
 ## Installation
 ```bash
 git clone https://github.com/AdamYuan/SATv2.git

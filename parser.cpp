@@ -71,7 +71,7 @@ void CnfFile::Parse(const char *filename)
 			Paren *ptr = *iter;
 			if(related_parens_set[1][ind].count(ptr))
 			{
-				printf("WARNING #%d PAREN IS TRUE FOREVER\n", ptr->paren_index);
+				printf("WARNING PAREN #%d IS TRUE FOREVER\n", ptr->paren_index);
 				related_parens_set[1][ind].erase(ptr);
 				iter = related_parens_set[0][ind].erase(iter);
 			}
