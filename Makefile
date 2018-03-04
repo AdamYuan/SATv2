@@ -1,4 +1,4 @@
-GCC_FLAGS = -Ofast -funsafe-loop-optimizations
+GCC_FLAGS = -Ofast -funsafe-loop-optimizations -lpthread
 EXECUTABLE_NAME = SATv2
 
 $(EXECUTABLE_NAME): \

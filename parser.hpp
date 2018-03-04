@@ -25,10 +25,9 @@ class CnfFile
 		explicit CnfFile();
 		explicit CnfFile(const char *filename);
 		void Parse(const char *filename);
-
 		inline int GetVarNum() const { return var_num_; }
 		inline int GetParenNum() const { return paren_num_; }
-		inline const std::vector<const Paren*> &GetRelatedParens(bool nagative, int var_index) const
+		inline const std::vector<const Paren*> &GetRelatedParens(bool nagative, int var_index) const 
 		{ return related_parens_vector_[nagative][var_index]; }
 		inline const Paren *GetParensArray() const { return parens_array_; }
 };

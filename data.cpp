@@ -8,14 +8,13 @@ Solution::Solution(CnfFile &file) : file_(file)
 }
 void Solution::Randomize(std::mt19937 &generator)
 {
-	std::uniform_int_distribution<int> distribution(0, 1);
 	for(int ind=0; ind<var_num_; ++ind)
-		var_value_array_[ind] = distribution(generator);
+		var_value_array_[ind] = generator() & 1;
 
 	satisfied_count_ = 0;
 	for(int ind=0; ind<paren_num_; ++ind)
 	{
-		paren_value_array_[ind] = getParenVal(file_.GetParensArray() + ind);
+		paren_value_array_[ind] = GetParenVal(file_.GetParensArray() + ind);
 		satisfied_count_ += paren_value_array_[ind];
 	}
 }
@@ -30,7 +29,7 @@ void Solution::Output() const
 bool Solution::Check() const
 {
 	for(int ind=0; ind<paren_num_; ++ind)
-		if(!getParenVal(file_.GetParensArray() + ind))
+		if(!GetParenVal(file_.GetParensArray() + ind))
 			return false;
 	return true;
 }

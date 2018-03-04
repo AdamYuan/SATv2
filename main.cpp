@@ -1,4 +1,5 @@
 #include <ctime>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include "solver.hpp"
@@ -9,9 +10,10 @@ static const char *kHelpStr{
 		"\t-max_tries [MAX TRIES]\n"\
 		"\t-max_temp [MAX TEMPERATURE]\n"\
 		"\t-min_temp [MIN TEMPERATURE]\n"\
-		"\t-seed [RANDOM SEED]"};
+		"\t-seed [RANDOM SEED]\n"\
+		"\t-mthread\n"};
 
-#define PRINT_HELP_AND_EXIT {printf("%s\n", kHelpStr); return 1;}
+#define PRINT_HELP_AND_EXIT { printf("%s\n", kHelpStr); return 1; }
 
 int main(int argc, char **argv)
 {
@@ -24,9 +26,16 @@ int main(int argc, char **argv)
 	if(argc == 0)
 		PRINT_HELP_AND_EXIT;
 	for(int ind=0; ind<argc; )
-		if(ind < argc - 1)
+	{
+		char *(&cmd){argv[ind]};
+		if(strcmp("-mthread", cmd) == 0)
 		{
-			char *(&cmd){argv[ind]}, *(&arg){argv[ind + 1]};
+			solver.multi_thread = true;
+			ind ++;
+		}
+		else if(ind < argc - 1)
+		{
+			char *(&arg){argv[ind + 1]};
 			if(strcmp("-in", cmd) == 0)
 				file.Parse(arg);
 			else if(strcmp("-max_tries", cmd) == 0)
@@ -43,15 +52,10 @@ int main(int argc, char **argv)
 		}
 		else
 			PRINT_HELP_AND_EXIT;
+	}
 
 	solver.OutputArgs();
 
-	clock_t clk = clock();
-	bool correct = solver.Run(file);
-	clk = clock() - clk;
+	solver.Run(file);
 
-	printf("time: %lf sec\n", (double)clk / CLOCKS_PER_SEC);
-
-	printf("correct: %d\n", correct);
-	return !correct;
 }

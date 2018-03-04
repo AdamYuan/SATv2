@@ -15,12 +15,12 @@ struct ModifyInfo
 class Solution
 {
 	private:
-		int var_num_, paren_num_;
-		CnfFile &file_;
 		bool var_value_array_[MAX_VAR_NUM], paren_value_array_[MAX_PAREN_NUM];
-		ModifyInfo paren_value_modify_array_[MAX_PAREN_NUM];
+		int var_num_, paren_num_;
 		int satisfied_count_, satisfied_count_tmp_, paren_value_modify_count_;
-		inline bool getParenVal(const Paren *paren) const
+		ModifyInfo paren_value_modify_array_[MAX_PAREN_NUM];
+		CnfFile &file_;
+		inline bool GetParenVal(const Paren *paren) const
 		{
 			for(int ind=0; ind<PAREN_SIZE; ++ind)
 			{
@@ -44,22 +44,19 @@ class Solution
 			const std::vector<const Paren*> &related_parens_update = file_.GetRelatedParens(var_ref, var_index);
 
 			for(const Paren* ptr : related_parens)
-			{
 				if(!paren_value_array_[ptr->paren_index])
 				{
 					paren_value_modify_array_[paren_value_modify_count_++] = {ptr->paren_index, true};
 					satisfied_count_tmp_ ++;
 				}
-			}
-
 			for(const Paren* ptr : related_parens_update)
 			{
 				const bool &paren_value_old = paren_value_array_[ptr->paren_index];
-				bool paren_value_new = getParenVal(ptr);
+				bool paren_value_new = GetParenVal(ptr);
 				if(paren_value_new != paren_value_old)
 				{
 					paren_value_modify_array_[paren_value_modify_count_++] = {ptr->paren_index, paren_value_new};
-					satisfied_count_tmp_ += (int)paren_value_new - (int)paren_value_old;
+					satisfied_count_tmp_ --;
 				}
 			}
 			var_ref = !var_ref;
@@ -77,6 +74,8 @@ class Solution
 		}
 		void Output() const;
 		bool Check() const;
+		inline int GetVarNum() const { return var_num_; }
+		inline int GetParenNum() const { return paren_num_; }
 		inline int GetSatisfiedCount() const { return satisfied_count_; }
 		inline bool Satisfied() const { return satisfied_count_ == paren_num_; }
 };

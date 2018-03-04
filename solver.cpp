@@ -1,58 +1,78 @@
 #include "solver.hpp"
-#include "data.hpp"
-#include <random>
 #include <chrono>
 #include <cmath>
+#include <future>
+#include <vector>
+#include <atomic>
 
-SatSolver::SatSolver() : max_tries(50), max_temperature(0.3f), min_temperature(0.01f)
+SatSolver::SatSolver() : multi_thread(false), max_tries(50), max_temperature(0.3f), min_temperature(0.01f)
 {
 	seed = (unsigned long)(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 }
 
 void SatSolver::OutputArgs()
 {
-	printf("seed: %lu\nmax tries: %d\nmax temperature: %f\nmin temperature: %f\n", 
+	printf("seed: %lu\nmax tries: %d\nmax temperature: %f\nmin temperature: %f\n\n", 
 			seed, max_tries, max_temperature, min_temperature);
 }
 
-bool SatSolver::Run(CnfFile &file)
+void SatSolver::Run(CnfFile &file)
 {
-	std::mt19937 generator(seed);
-	std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
+	auto start = std::chrono::system_clock::now();
 
-	int var_num = file.GetVarNum();
-	Solution solution(file);
-	for(int i=1; i<=max_tries; ++i)
+#define PRINT_CORRECT(stmt) printf("correct: %d\n", stmt);
+#define PRINT_TRY_NO(x) printf("\rTRY NO. %d", (x)); fflush(stdout)
+#define PRINT_ELAPSED_SECONDS printf("time: %lf sec\n", std::chrono::duration<double>(std::chrono::system_clock::now() - start).count())
+#define PRINT_SOLUTION(solution) printf("\n"); solution.Output(); PRINT_ELAPSED_SECONDS; PRINT_CORRECT(solution.Check())
+
+	if(multi_thread)
 	{
-		printf("\rTRY NO. %d", i);
-		fflush(stdout);
-		solution.Randomize(generator);
+		uint64_t cores = std::thread::hardware_concurrency();
+		std::vector<std::future<void>> future_vector;
+		future_vector.reserve(cores);
+		std::atomic_int try_id{1};
+		std::mt19937 seed_generator(seed);
 
-		int counter = 0;
-		float temperature = max_temperature;
-		while(temperature > min_temperature)
+		while(cores --)
 		{
-			if(solution.Satisfied())
-			{
-				printf("\n");
-				solution.Output();
-				return solution.Check();
-			}
-			temperature = max_temperature * expf(float(-(counter++)) / float(var_num * i));
+			future_vector.push_back(std::async(
+						[&](unsigned long thread_seed)
+						{
+							std::mt19937 generator(thread_seed);
+							Solution solution(file);
+							while(true)
+							{
+								int index = try_id ++;
+								if(index > max_tries)
+									break;
+								PRINT_TRY_NO(index);
 
-			for(int ind=0; ind<var_num; ++ind)
-			{
-				int new_satisfied_count = solution.TestFlip(ind);
-
-				float separator = 1.0f / (
-						1.0f + expf(
-							float(solution.GetSatisfiedCount() - new_satisfied_count) / temperature
-							)
-						);
-				if(distribution(generator) < separator)
-					solution.ApplyFlip(ind);
-			}
+								if(try_impl(generator, solution, index))
+								{
+									try_id = max_tries + 1;
+									PRINT_SOLUTION(solution);
+									break;
+								}
+							}
+						}, seed_generator()
+			));
 		}
 	}
-	return false;
+	else
+	{
+		std::mt19937 generator(seed);
+		Solution solution(file);
+		for(int i=1; i<=max_tries; ++i)
+		{
+			PRINT_TRY_NO(i);
+			if(try_impl(generator, solution, i))
+				break;
+		}
+		PRINT_SOLUTION(solution);
+	}
+
+#undef PRINT_TRY_NO
+#undef PRINT_CORRECT
+#undef PRINT_ELAPSED_SECONDS
+#undef PRINT_SOLUTION
 }
