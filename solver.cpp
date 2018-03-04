@@ -2,8 +2,8 @@
 #include <chrono>
 #include <cmath>
 #include <future>
-#include <vector>
 #include <atomic>
+#include <mutex>
 
 SatSolver::SatSolver() : multi_thread(false), max_tries(50), max_temperature(0.3f), min_temperature(0.01f)
 {
@@ -27,11 +27,13 @@ void SatSolver::Run(CnfFile &file)
 
 	if(multi_thread)
 	{
-		uint64_t cores = std::thread::hardware_concurrency();
+		unsigned cores = std::thread::hardware_concurrency();
 		std::vector<std::future<void>> future_vector;
 		future_vector.reserve(cores);
+
 		std::atomic_int try_id{1};
 		std::mt19937 seed_generator(seed);
+		std::mutex output_mutex;
 
 		while(cores --)
 		{
@@ -50,6 +52,8 @@ void SatSolver::Run(CnfFile &file)
 								if(try_impl(generator, solution, index))
 								{
 									try_id = max_tries + 1;
+
+									std::lock_guard<std::mutex> guard(output_mutex); //set lock to prevent format error
 									PRINT_SOLUTION(solution);
 									break;
 								}
