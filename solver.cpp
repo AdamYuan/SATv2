@@ -20,10 +20,10 @@ void SatSolver::OutputArgs()
 
 void SatSolver::Run(const CnfFile &file)
 {
-	auto start = std::chrono::system_clock::now();
+	auto start = std::chrono::steady_clock::now();
 
 #define PRINT_TRY_NO(x) printf("\rTRY NO. %d", (x)); fflush(stdout)
-#define PRINT_ELAPSED_SECONDS printf("time: %lf sec, ", std::chrono::duration<double>(std::chrono::system_clock::now() - start).count())
+#define PRINT_ELAPSED_SECONDS printf("time: %lf sec, ", std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count())
 #define PRINT_CORRECT(stmt) printf("correct: %d\n", stmt);
 #define PRINT_SOLUTION(solution, try_num) { printf("\n"); solution.Output(); PRINT_ELAPSED_SECONDS; printf("try: %d, ", (try_num)); PRINT_CORRECT(solution.Check()); }
 	if(multi_thread)
