@@ -1,11 +1,9 @@
-#include <ctime>
-#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include "solver.hpp"
 
-static const char *kHelpStr{
-	"AdamYuan's SAT solver\n"\
+static const char kHelpStr[]{
+	"AdamYuan's 3-SAT solver\n"\
 		"\t-in [CNF FILE NAME]\n"
 		"\t-max_tries [MAX TRIES]\n"\
 		"\t-max_temp [MAX TEMPERATURE]\n"\
@@ -17,27 +15,27 @@ static const char *kHelpStr{
 
 int main(int argc, char **argv)
 {
-	argc--;
-	argv++;
+	argc--; argv++;
 
 	CnfFile file;
 	SatSolver solver;
+	char filename[512] = {};
 
 	if(argc == 0)
 		PRINT_HELP_AND_EXIT;
-	for(int ind=0; ind<argc; )
+	for(int i = 0; i < argc; )
 	{
-		char *(&cmd){argv[ind]};
+		char *(&cmd){argv[i]};
 		if(strcmp("-mthread", cmd) == 0)
 		{
 			solver.multi_thread = true;
-			ind ++;
+			++ i;
 		}
-		else if(ind < argc - 1)
+		else if(i < argc - 1)
 		{
-			char *(&arg){argv[ind + 1]};
+			char *(&arg){argv[i + 1]};
 			if(strcmp("-in", cmd) == 0)
-				file.Parse(arg);
+				strcpy(filename, arg);
 			else if(strcmp("-max_tries", cmd) == 0)
 				sscanf(arg, "%d", &solver.max_tries);
 			else if(strcmp("-max_temp", cmd) == 0)
@@ -48,14 +46,13 @@ int main(int argc, char **argv)
 				sscanf(arg, "%lu", &solver.seed);
 			else
 				PRINT_HELP_AND_EXIT;
-			ind += 2;
+			i += 2;
 		}
 		else
 			PRINT_HELP_AND_EXIT;
 	}
 
+	file.Parse(filename);
 	solver.OutputArgs();
-
 	solver.Run(file);
-
 }

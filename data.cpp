@@ -1,35 +1,31 @@
 #include "data.hpp"
 #include <random>
 #include <cstdio>
-Solution::Solution(CnfFile &file) : file_(file)
-{
-	var_num_ = file.GetVarNum();
-	paren_num_ = file.GetParenNum();
-}
+Solution::Solution(const CnfFile &file) : m_file(file) {  }
 void Solution::Randomize(std::mt19937 &generator)
 {
-	for(int ind=0; ind<var_num_; ++ind)
-		var_value_array_[ind] = generator() & 1;
+	for(int i = 0; i < m_file.GetVarCount(); ++i)
+		m_var_value[i] = generator() & 1;
 
-	satisfied_count_ = 0;
-	for(int ind=0; ind<paren_num_; ++ind)
+	m_satisfied_cnt = 0;
+	for(int i = 0; i < m_file.GetClauseCount(); ++i)
 	{
-		paren_value_array_[ind] = GetParenVal(file_.GetParensArray() + ind);
-		satisfied_count_ += paren_value_array_[ind];
+		m_clause_value[i] = GetClauseVal(m_file.GetClauseArray() + i);
+		m_satisfied_cnt += m_clause_value[i] ? 1 : 0;
 	}
 }
 
 void Solution::Output() const
 {
-	for(int ind=0; ind<var_num_; ++ind)
-		printf("%d ", var_value_array_[ind]);
+	for(int i = 0; i < m_file.GetVarCount(); ++i)
+		printf("%d ", m_var_value[i]);
 	printf("\n");
 }
 
 bool Solution::Check() const
 {
-	for(int ind=0; ind<paren_num_; ++ind)
-		if(!GetParenVal(file_.GetParensArray() + ind))
+	for(int i = 0; i < m_file.GetClauseCount(); ++i)
+		if(!GetClauseVal(m_file.GetClauseArray() + i))
 			return false;
 	return true;
 }

@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <set>
 
-CnfFile::CnfFile() : var_num_(0), paren_num_(0) {  }
-CnfFile::CnfFile(const char *filename) : var_num_(0), paren_num_(0) { Parse(filename); }
+CnfFile::CnfFile() : m_var_cnt(0), m_clause_cnt(0) {  }
+CnfFile::CnfFile(const char *filename) : m_var_cnt(0), m_clause_cnt(0) { Parse(filename); }
 
 void CnfFile::Parse(const char *filename)
 {
@@ -15,73 +15,75 @@ void CnfFile::Parse(const char *filename)
 
 	std::string buf;
 
-	int parens_array_index = 0, line_ind = 0;
+	int clause_arr_index = 0, line_id = 0;
 
-	std::set<Paren*> related_parens_set[2][MAX_VAR_NUM];
-#define THROW_PARSE_EXCEPTION throw std::runtime_error("CNF FILE PARSE ERROR AT LINE #" + std::to_string(line_ind))
+	std::set<Clause*> related_clauses_set[2][MAX_VAR_NUM];
+#define THROW_PARSE_EXCEPTION throw std::runtime_error("CNF FILE PARSE ERROR AT LINE #" + std::to_string(line_id))
 	while(std::getline(in_file, buf))
 	{
-		line_ind ++;
+		line_id ++;
 		if(buf.empty()) continue;
 
 		const char &head = buf.front();
 		if(head == '%' || head == '0') break; //end
 		else if(head == 'c') continue; //comment
-		else if(head == 'p') //p cnf [var_num_] [paren_num_]
-			sscanf(buf.c_str(), "%*c%*s%d%d", &var_num_, &paren_num_);
+		else if(head == 'p') //p cnf [m_var_cnt] [m_clause_cnt]
+			sscanf(buf.c_str(), "%*c%*s%d%d", &m_var_cnt, &m_clause_cnt);
 		else //n1 n2 n3 0
 		{
 			//range check
-			if(parens_array_index >= paren_num_)
+			if(clause_arr_index >= m_clause_cnt)
 				THROW_PARSE_EXCEPTION;
 
-			Paren &paren = parens_array_[parens_array_index];
-			paren.paren_index = parens_array_index;
+			Clause &clause = m_clause_arr[clause_arr_index];
+			clause.clause_index = clause_arr_index;
 
 			std::istringstream str_input(buf);
+			//counter: the count of number in this line
 			int counter = 0, buf;
 			while(str_input >> buf)
 			{
 				if(buf == 0) break;
 
-				ElementPair &data = paren.elements[counter];
-				data = {std::abs(buf) - 1, buf < 0};
+				ElementPair &data = clause.elements[counter];
+				data.var_index = std::abs(buf) - 1;
+				data.nagative = buf < 0;
 
-				if(data.var_index >= var_num_) 
+				if(data.var_index >= m_var_cnt) 
 					THROW_PARSE_EXCEPTION;
 
-				related_parens_set[data.nagative][data.var_index].insert(parens_array_ + parens_array_index);
+				related_clauses_set[data.nagative][data.var_index].insert(m_clause_arr + clause_arr_index);
 
-				counter ++;
+				++ counter;
 			}
 			if(counter != 0)
 			{
 				if(counter != PAREN_SIZE)
 					THROW_PARSE_EXCEPTION;
-				parens_array_index++;
+				clause_arr_index++;
 			}
 		}
 	}
 
-	for(int ind=0; ind<var_num_; ++ind)
+	for(int i = 0; i < m_var_cnt; ++i)
 	{
-		//find true-forever parens
-		for(auto iter = related_parens_set[0][ind].begin(); iter != related_parens_set[0][ind].end(); )
+		//find true-forever clauses
+		for(auto iter = related_clauses_set[0][i].begin(); iter != related_clauses_set[0][i].end(); )
 		{
-			Paren *ptr = *iter;
-			if(related_parens_set[1][ind].count(ptr))
+			Clause *ptr = *iter;
+			if(related_clauses_set[1][i].count(ptr))
 			{
-				printf("WARNING PAREN #%d IS TRUE FOREVER\n", ptr->paren_index);
-				related_parens_set[1][ind].erase(ptr);
-				iter = related_parens_set[0][ind].erase(iter);
+				printf("WARNING PAREN #%d IS TRUE FOREVER\n", ptr->clause_index);
+				related_clauses_set[1][i].erase(ptr);
+				iter = related_clauses_set[0][i].erase(iter);
 			}
 			else
 				++iter;
 		}
-		for(int t=0; t<=1; ++t)
-			related_parens_vector_[t][ind] = std::vector<const Paren*>(related_parens_set[t][ind].begin(), related_parens_set[t][ind].end());
+		m_related_clauses_vec[0][i] = std::vector<const Clause*>(related_clauses_set[0][i].begin(), related_clauses_set[0][i].end());
+		m_related_clauses_vec[1][i] = std::vector<const Clause*>(related_clauses_set[1][i].begin(), related_clauses_set[1][i].end());
 	}
 
 	printf("%s parse successful with:\n", filename);
-	printf("var num: %d\nparen num: %d\n\n", var_num_, paren_num_);
+	printf("var num: %d\nclause num: %d\n\n", m_var_cnt, m_clause_cnt);
 }

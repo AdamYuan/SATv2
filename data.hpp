@@ -8,76 +8,67 @@
 
 struct ModifyInfo
 {
-	int paren_index;
-	bool value;
+	int clause_index, value;
 };
 
 class Solution
 {
 	private:
-		bool var_value_array_[MAX_VAR_NUM], paren_value_array_[MAX_PAREN_NUM];
-		int var_num_, paren_num_;
-		int satisfied_count_, satisfied_count_tmp_, paren_value_modify_count_;
-		ModifyInfo paren_value_modify_array_[MAX_PAREN_NUM];
-		CnfFile &file_;
-		inline bool GetParenVal(const Paren *paren) const
+		bool m_var_value[MAX_VAR_NUM];
+		int m_clause_value[MAX_PAREN_NUM];
+		int m_satisfied_cnt, m_satisfied_cnt_tmp, m_clause_val_modify_cnt;
+
+		ModifyInfo m_clause_val_modify_arr[MAX_PAREN_NUM];
+		const CnfFile &m_file;
+		inline int GetClauseVal(const Clause *clause) const
 		{
-			for(int ind=0; ind<PAREN_SIZE; ++ind)
+			int ret = 0;
+			for(int ind = 0; ind < PAREN_SIZE; ++ind)
 			{
-				const ElementPair &element = paren->elements[ind];
-				if(element.nagative != var_value_array_[element.var_index])
-					return true;
+				const ElementPair &element = clause->elements[ind];
+				if(element.nagative != m_var_value[element.var_index]) ++ret;
 			}
-			return false;
+			return ret;
 		}
 	public:
-		explicit Solution(CnfFile &file);
+		explicit Solution(const CnfFile &file);
 		void Randomize(std::mt19937 &generator);
 		inline int TestFlip(int var_index)
 		{
-			satisfied_count_tmp_ = satisfied_count_;
-			paren_value_modify_count_ = 0;
+			m_satisfied_cnt_tmp = m_satisfied_cnt;
+			m_clause_val_modify_cnt = 0;
 
-			bool &var_ref = var_value_array_[var_index];
-			const std::vector<const Paren*> &related_parens = file_.GetRelatedParens(var_ref, var_index);
-			var_ref = !var_ref;
-			const std::vector<const Paren*> &related_parens_update = file_.GetRelatedParens(var_ref, var_index);
+			const std::vector<const Clause*> &related_clauses = m_file.GetRelatedClauses(m_var_value[var_index], var_index);
+			const std::vector<const Clause*> &related_clauses_update = m_file.GetRelatedClauses(!m_var_value[var_index], var_index);
 
-			for(const Paren* ptr : related_parens)
-				if(!paren_value_array_[ptr->paren_index])
-				{
-					paren_value_modify_array_[paren_value_modify_count_++] = {ptr->paren_index, true};
-					satisfied_count_tmp_ ++;
-				}
-			for(const Paren* ptr : related_parens_update)
+			for(const Clause* ptr : related_clauses)
 			{
-				const bool &paren_value_old = paren_value_array_[ptr->paren_index];
-				bool paren_value_new = GetParenVal(ptr);
-				if(paren_value_new != paren_value_old)
-				{
-					paren_value_modify_array_[paren_value_modify_count_++] = {ptr->paren_index, paren_value_new};
-					satisfied_count_tmp_ --;
-				}
+				m_clause_val_modify_arr[m_clause_val_modify_cnt++] = {ptr->clause_index, 1};
+				if(m_clause_value[ptr->clause_index] == 0) m_satisfied_cnt_tmp ++;
 			}
-			var_ref = !var_ref;
-			return satisfied_count_tmp_;
+			for(const Clause* ptr : related_clauses_update)
+			{
+				m_clause_val_modify_arr[m_clause_val_modify_cnt++] = {ptr->clause_index, -1};
+				if(m_clause_value[ptr->clause_index] == 1) m_satisfied_cnt_tmp --;
+			}
+			return m_satisfied_cnt_tmp;
 		}
 		inline void ApplyFlip(int var_index)
 		{
-			var_value_array_[var_index] = !var_value_array_[var_index];
-			while(paren_value_modify_count_--)
+			m_var_value[var_index] ^= 1;
+			while(m_clause_val_modify_cnt--)
 			{
-				const ModifyInfo &info = paren_value_modify_array_[paren_value_modify_count_];
-				paren_value_array_[info.paren_index] = info.value;
+				const ModifyInfo &info = m_clause_val_modify_arr[m_clause_val_modify_cnt];
+				m_clause_value[info.clause_index] += info.value;
 			}
-			satisfied_count_ = satisfied_count_tmp_;
+			m_satisfied_cnt = m_satisfied_cnt_tmp;
 		}
 		void Output() const;
 		bool Check() const;
-		inline int GetVarNum() const { return var_num_; }
-		inline int GetParenNum() const { return paren_num_; }
-		inline int GetSatisfiedCount() const { return satisfied_count_; }
-		inline bool Satisfied() const { return satisfied_count_ == paren_num_; }
+		inline int GetVarCount() const { return m_file.GetVarCount(); }
+		inline int GetClauseCount() const { return m_file.GetClauseCount(); }
+		inline int GetSatisfiedCount() const { return m_satisfied_cnt; }
+		inline bool Satisfied() const { return m_satisfied_cnt == GetClauseCount(); }
 };
 
 #endif
