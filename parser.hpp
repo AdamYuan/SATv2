@@ -5,7 +5,7 @@
 #include "config.hpp"
 
 struct ElementPair { int var_index; bool nagative; };
-struct Clause { int clause_index; ElementPair elements[PAREN_SIZE]; };
+struct Clause { int clause_index; std::vector<ElementPair> elements; };
 
 class CnfFile
 {

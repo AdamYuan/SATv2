@@ -7,6 +7,7 @@
 CnfFile::CnfFile() : m_var_cnt(0), m_clause_cnt(0) {  }
 CnfFile::CnfFile(const char *filename) : m_var_cnt(0), m_clause_cnt(0) { Parse(filename); }
 
+std::set<Clause*> related_clauses_set[2][MAX_VAR_NUM];
 void CnfFile::Parse(const char *filename)
 {
 	std::ifstream in_file(filename);
@@ -17,7 +18,6 @@ void CnfFile::Parse(const char *filename)
 
 	int clause_arr_index = 0, line_id = 0;
 
-	std::set<Clause*> related_clauses_set[2][MAX_VAR_NUM];
 #define THROW_PARSE_EXCEPTION throw std::runtime_error("CNF FILE PARSE ERROR AT LINE #" + std::to_string(line_id))
 	while(std::getline(in_file, buf))
 	{
@@ -40,12 +40,14 @@ void CnfFile::Parse(const char *filename)
 
 			std::istringstream str_input(buf);
 			//counter: the count of number in this line
-			int counter = 0, buf;
+			int buf;
 			while(str_input >> buf)
 			{
 				if(buf == 0) break;
 
-				ElementPair &data = clause.elements[counter];
+				clause.elements.emplace_back();
+
+				ElementPair &data = clause.elements.back();
 				data.var_index = std::abs(buf) - 1;
 				data.nagative = buf < 0;
 
@@ -53,15 +55,9 @@ void CnfFile::Parse(const char *filename)
 					THROW_PARSE_EXCEPTION;
 
 				related_clauses_set[data.nagative][data.var_index].insert(m_clause_arr + clause_arr_index);
-
-				++ counter;
 			}
-			if(counter != 0)
-			{
-				if(counter != PAREN_SIZE)
-					THROW_PARSE_EXCEPTION;
+			if(!clause.elements.empty())
 				clause_arr_index++;
-			}
 		}
 	}
 

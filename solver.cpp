@@ -25,7 +25,7 @@ void SatSolver::Run(const CnfFile &file)
 #define PRINT_TRY_NO(x) printf("\rTRY NO. %d", (x)); fflush(stdout)
 #define PRINT_ELAPSED_SECONDS printf("time: %lf sec, ", std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count())
 #define PRINT_CORRECT(stmt) printf("correct: %d\n", stmt);
-#define PRINT_SOLUTION(solution, try_num) { printf("\n"); solution.Output(); PRINT_ELAPSED_SECONDS; printf("try: %d, ", (try_num)); PRINT_CORRECT(solution.Check()); }
+#define PRINT_SOLUTION(solution, try_num) { printf("\n"); (solution).Output(); PRINT_ELAPSED_SECONDS; printf("try: %d, ", (try_num)); PRINT_CORRECT((solution).Check()); }
 	if(multi_thread)
 	{
 		unsigned cores = std::thread::hardware_concurrency();
@@ -42,7 +42,7 @@ void SatSolver::Run(const CnfFile &file)
 						[&](unsigned long thread_seed) -> void
 						{
 							std::mt19937 generator(thread_seed);
-							Solution solution(file);
+							Solution *solution = new Solution(file);
 
 							while(true)
 							{
@@ -56,15 +56,16 @@ void SatSolver::Run(const CnfFile &file)
 									output_mutex.unlock();
 								}
 
-								if(try_impl(generator, solution, index))
+								if(try_impl(generator, *solution, index))
 								{
 									try_id = max_tries + 1;
 
 									std::lock_guard<std::mutex> guard(output_mutex);
-									PRINT_SOLUTION(solution, index);
+									PRINT_SOLUTION(*solution, index);
 									break;
 								}
 							}
+							delete solution;
 						}, seed_generator() //pass seed
 			));
 		}
@@ -72,16 +73,17 @@ void SatSolver::Run(const CnfFile &file)
 	else
 	{
 		std::mt19937 generator(seed);
-		Solution solution(file);
-		for(int i=1; i<=max_tries; ++i)
+		Solution *solution = new Solution(file);
+		for(int i = 1; i <= max_tries; ++i)
 		{
 			PRINT_TRY_NO(i);
-			if(try_impl(generator, solution, i))
+			if(try_impl(generator, *solution, i))
 			{
-				PRINT_SOLUTION(solution, i);
+				PRINT_SOLUTION(*solution, i);
 				break;
 			}
 		}
+		delete solution;
 	}
 
 #undef PRINT_TRY_NO

@@ -13,12 +13,13 @@ static const char kHelpStr[]{
 
 #define PRINT_HELP_AND_EXIT { printf("%s\n", kHelpStr); return 1; }
 
+CnfFile file;
+SatSolver solver;
+
 int main(int argc, char **argv)
 {
 	argc--; argv++;
 
-	CnfFile file;
-	SatSolver solver;
 	char filename[512] = {};
 
 	if(argc == 0)

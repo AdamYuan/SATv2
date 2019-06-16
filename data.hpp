@@ -23,15 +23,12 @@ class Solution
 		inline int GetClauseVal(const Clause *clause) const
 		{
 			int ret = 0;
-			for(int ind = 0; ind < PAREN_SIZE; ++ind)
-			{
-				const ElementPair &element = clause->elements[ind];
-				if(element.nagative != m_var_value[element.var_index]) ++ret;
-			}
+			for(const ElementPair &e : clause->elements)
+				if(e.nagative != m_var_value[e.var_index]) ++ret;
 			return ret;
 		}
 	public:
-		explicit Solution(const CnfFile &file);
+		Solution(const CnfFile &file);
 		void Randomize(std::mt19937 &generator);
 		inline int TestFlip(int var_index)
 		{
