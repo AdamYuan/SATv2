@@ -1,5 +1,5 @@
 # SATv2
-An efficient c++ implementation of SASAT algorithm for solving 3-SAT(boolean satisfiability problem)
+An efficient c++ implementation of SASAT algorithm for solving boolean satisfiability problem
 ## Installation
 ```bash
 git clone https://github.com/AdamYuan/SATv2.git
